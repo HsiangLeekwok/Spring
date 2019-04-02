@@ -94,5 +94,10 @@ IOC bean初始化放到容器(Map)
     5、@Primary注解bean首选如何使用？
     6、@Autowired @Resource @Inject区别？
     
-IOC+
+IOC：得到一些特殊的bean
 AOP: 通过Java特殊的bean，实现实例的增强
+
+JDK：invocationHander，Proxy，反射....// 要实现接口才能代理
+CGLIB：继承要被动态代理的类// 继承
+
+AnnotationAwareAspectJAutoProxyCreator.class 贯穿了整个IOC
