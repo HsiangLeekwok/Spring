@@ -6,8 +6,8 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
-        <module name="marven-v1.0" />
         <module name="marvenV10" />
+        <module name="marven-v1.0" />
       </profile>
     </annotationProcessing>
   </component>
