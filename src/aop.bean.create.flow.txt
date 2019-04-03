@@ -1,0 +1,103 @@
+# Spring 中 AOP 实例的创建过程 ———— 源码解析
+
+```Java
+/**
+ * <b>Author</b>: 小果<br/>
+ * <b>Date</b>: 2019/04/01 19:35<br/>
+ * <b>Version</b>: v1.0<br/>
+ * <b>Description</b>: 测试 AOP 切面
+ * <p>
+ * 日志切面类的方法需要动态感知到div()方法的运行<br/>
+ * 通知方法：<br/>
+ * 前置通知：logStart(); 在执行div()之前运行(@Before)<br/>
+ * 后置通知：logEnd();在执行div()之后运行，不管是否有异常都会执行(@After)<br/>
+ * 返回通知：logReturn(); 在目标方法div()正常返回值后运行，出现异常之后不会执行(@AfterReturning)<br/>
+ * 异常通知：logException(); 在目标方法div()发生异常时运行(@AfterThrowing)<br/>
+ * 环绕通知：动态代理，需要手动执行joinPoint.proceed()才会去执行div()方法，执行div之前相当于前置通知，执行之后相当于后置通知(@Around)<br/></p>
+ */
+@Configuration
+@EnableAspectJAutoProxy // 主要看这个注解的实现过程以及其方法链的调用过程
+public class Cap10MainConfig {
+
+    @Bean
+    public Calculator calculator() {
+        return new Calculator();
+    }
+
+    @Bean
+    public LogAspect logAspect() {
+        return new LogAspect();
+    }
+}
+
+/**
+ * <b>Author</b>: 小果<br/>
+ * <b>Date</b>: 2019/04/01 19:36<br/>
+ * <b>Version</b>: v1.0<br/>
+ * <b>Description</b>: 被 AOP 切分的类及其方法
+ */
+public class Calculator {
+
+    public int div(int i, int j) {
+        System.out.println("div method begin...............");
+        int result = i / j;
+        System.out.println("div method end..............");
+        return result;
+    }
+}
+
+/**
+ * <b>Author</b>: 小果<br/>
+ * <b>Date</b>: 2019/04/01 19:36<br/>
+ * <b>Version</b>: v1.0<br/>
+ * <b>Description</b>: AOP 切面实现类
+ */
+@Aspect
+public class LogAspect {
+
+    @Pointcut("execution(public int com.enjoy.cap10.aop.Calculator.*(..))")
+    public void pointCut() {
+
+    }
+
+    @Before("pointCut()")
+    public void beforeExecute(JoinPoint point) {
+        System.out.println(point.getSignature().getName() + "'s before execute........parameters: " + Arrays.asList(point.getArgs()));
+    }
+
+    @After("pointCut()")
+    public void afterExecute(JoinPoint point) {
+        System.out.println(point.getSignature().getName() + "'s after execute..........");
+    }
+
+    @AfterReturning(value = "pointCut()", returning = "result")
+    public void afterReturning(Object result) {
+        System.out.println("after returning.........result: " + result);
+    }
+
+    @AfterThrowing(value = "pointCut()", throwing = "exception")
+    public void afterThrowing(Exception exception) {
+        System.out.println("after throwing.......exception: {" + exception + "}");
+    }
+
+    @Around("pointCut()")
+    public Object around(ProceedingJoinPoint point) throws Throwable {
+        System.out.println("around begin..............");
+        // 这里相当于调用了目标方法进行执行
+        Object object = point.proceed();
+        System.out.println("around end...............");
+        return object;
+    }
+}
+
+```
+
+1、入口
+AnnotationConfigApplicationContext app = new AnnotationConfigApplicationContext(Cap10MainConfig.class);
+
+2、创建流程
+/*
+* org.springframework.context.annotation.AnnotationConfigApplicationContext.class
+*/
+85行：AnnotationConfigApplicationContext(java.lang.Class<?>...)
+88行：refresh();// 这里跟普通 bean 创建流程一样

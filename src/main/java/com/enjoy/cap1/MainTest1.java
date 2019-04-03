@@ -15,10 +15,10 @@ public class MainTest1 {
 
     public static void main(String[] args) {
 //        ApplicationContext app = new ClassPathXmlApplicationContext("beans.xml");
-        ApplicationContext app= new AnnotationConfigApplicationContext(MainConfig.class) ;
+        ApplicationContext app = new AnnotationConfigApplicationContext(MainConfig.class);
 //        Person person= (Person) app.getBean("person");
 //        System.out.println(person);
-        String[]namesForBean=app.getBeanNamesForType(Person.class);
+        String[] namesForBean = app.getBeanNamesForType(Person.class);
         for (String name : namesForBean) {
             System.out.println(name);
         }

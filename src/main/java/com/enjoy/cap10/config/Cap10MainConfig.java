@@ -10,7 +10,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * <b>Author</b>: Hsiang Leekwok<br/>
  * <b>Date</b>: 2019/04/01 19:35<br/>
  * <b>Version</b>: v1.0<br/>
- * <b>Description</b>: 测试AOP切面
+ * <b>Description</b>: 测试 AOP 切面
  * <p>
  * 日志切面类的方法需要动态感知到div()方法的运行<br/>
  * 通知方法：<br/>

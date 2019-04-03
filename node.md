@@ -102,6 +102,25 @@ CGLIB：继承要被动态代理的类// 继承
 
 AnnotationAwareAspectJAutoProxyCreator.class 贯穿了整个IOC
 
+AOP 事务
+
+    类如：
+    @Transactional
+    private void invoke(){
+    }
+    
+    原理：
+    transactionManager.beginTransaction();
+    try{
+        invoke method()
+    }
+    except{
+        rollback
+    }finally{
+        if no error then commit
+    }
+    
+
 
 ## MySQL 索引
 

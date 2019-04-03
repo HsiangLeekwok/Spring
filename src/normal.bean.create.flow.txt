@@ -1,0 +1,115 @@
+# Spring 中业务 bean 实例的创建过程 ———— 源码解析
+
+1、在 Configuration 中通过注解确定某个 bean
+
+```Java
+/**
+ * Author: 小果
+ * Date: 2019/03/30 08:25
+ * Version: v1.0
+ * Description: 注解，一个配置类，等于一个配置文件
+ */
+@Configuration
+public class MainConfig {
+
+    // 给容器中注册一个bean，类型为返回值的类型
+    @Bean("person01")
+    public Person person01() {
+        return new Person("test", 36);
+    }
+}
+```
+
+2、在 main 中启动 ApplicationContext 上下文，一般使用：AnnotationConfigApplicationContext.class
+
+/*
+* AnnotationConfigApplicationContext.class
+*/
+ApplicationContext app = new AnnotationConfigApplicationContext(MainConfig.class);
+85 行：refresh(); // 刷新 IOC 里面的 bean，已有的先清理，然后再创建
+----------->
+
+    /*
+    * org.springframework.context.support.AbstractApplicationContext.class
+    */
+    516行：refresh// 刷新 IOC 里的 bean 列表
+    550行：finishBeanFactoryInitialization(beanFactory)// 完成所有非懒加载的单实例 bean 的初始化工作
+    841行：finishBeanFactoryInitialization
+    869行：beanFactory.preInstantiateSingletons(); // 通过 beanFactory 来进行预初始化工作
+    ----------->
+
+        /*
+        * org.springframework.beans.factory.support.DefaultListableBeanFactory.class
+        */
+        727行：preInstantiateSingletons
+        /*
+        * 获取当前已经定义了的 bean names，其中包括 Configuration、Autowired、Required、Commom、EventListener等 5 个处理器，
+        * 这几个处理器会先创建，且在普通业务 bean 创建的时候会用到，也就是普通业务 bean 的创建会依赖这些先创建的处理器来进行恰当的增强，
+        * 而这些处理器也会在普通业务bean创建前后进行相应的拦截并给出通知。
+        * 注：其中自己定义的 MainConfig.class 也是一个 bean。<b>Spring中，万物皆 bean</b>，而 Java 中，万物皆对象
+        */
+        737行：this.beanDefinitionNames
+        760行：getBean(beanName);
+        ----------->
+
+            /*
+            * org.springframework.beans.factory.support.AbstractBeanFactory.class
+            */
+            198行：getBean(java.lang.String)
+            239行：doGetBean
+            246行：Object sharedInstance = getSingleton(beanName);// 检测是否有已经定义过了的单实例 bean，此时由于是第一次创建 bean，所以返回 null
+            268行：BeanFactory parentBeanFactory = getParentBeanFactory();// 检测 bean 是否已经在父类的 BeanFactory 中存在，第一次创建，肯定也不会存在
+            287行：markBeanAsCreated(beanName);// 标记一下 bean 已创建，实际上就是把 bean 的名字放在一个列表里表示该列表里的所有 bean 都已经创建了，这个列表也会包含前面的几个处理器
+            317行：createBean(beanName, mbd, args);// 真正创建 bean 的方法在这里
+            ----------->
+
+                /*
+                * org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.class
+                * 创建 bean 的方法，所有 Spring 中的 bean 都会通过此方法来创建、赋值属性、后置处理增强等
+                */
+                 462行：createBean()// 真正创建 bean 的方法
+                 490行：Object bean = resolveBeforeInstantiation(beanName, mbdToUse);//给该实例bean的初始化前置处理器们机会初始化
+                1033行：resolveBeforeInstantiation(String beanName, RootBeanDefinition mbd)// 这里一般是给 AOP 中系统级别的拦截用的
+                1040行：bean = applyBeanPostProcessorsBeforeInstantiation(targetType, beanName);// 给 bean 加初始化方法开始前的拦截处理器
+                1042行：bean = applyBeanPostProcessorsAfterInitialization(bean, beanName);// 给 bean 加初始化方法执行后的拦截处理器
+                 501行：Object beanInstance = doCreateBean(beanName, mbdToUse, args);// 创建 bean
+                 532行：doCreateBean(final String beanName, final RootBeanDefinition mbd, final @Nullable Object[] args)
+                 536行：BeanWrapper instanceWrapper// 所有的 bean 都会通过 BeanWrapper 进行封装
+                 538行：instanceWrapper = this.factoryBeanInstanceCache.remove(beanName);//如果当前要创建的 bean 是单实例，则尝试将缓存中已有的实例移除，此时是第一次创建，所以不会有这一步操作
+                 541行：instanceWrapper = createBeanInstance(beanName, mbd, args);// 创建 bean 实例
+                 553行：applyMergedBeanDefinitionPostProcessors(mbd, beanType, beanName);// BeanDefinition 前置处理器在此处进行拦截，也就是前面定义了的 5 个处理器
+                 572行：addSingletonFactory(beanName, () -> getEarlyBeanReference(beanName, mbd, bean));// 快速将刚刚创建的 bean 加入 BeanFactory 以在其生命周期内能够被他处理器拦截
+                 578行：populateBean(beanName, mbd, instanceWrapper);// 给 bean 的属性赋值
+                1284行：populateBean// 给属性赋值，此时还会尝试给前面定义的5个处理器相应的拦截机会，如实现了InstantiationAwareBeanPostProcessor接口的处理器，也即属性赋值的拦截，通过处理器方法赋值进 bean
+                 579行：exposedObject = initializeBean(beanName, exposedObject, mbd);// 初始化 bean
+                /*
+                * 给实现了 BeanPostProcessor 处理器的 bean 一个机会进行 init 方法调用前后的拦截
+                */
+                1685行：initializeBean(java.lang.String, java.lang.Object, org.springframework.beans.factory.support.RootBeanDefinition)
+                1693行：invokeAwareMethods(beanName, bean);// 如果 bean 实现了几个顶层的 Aware 接口，这里给机会进行赋值，如 BeanNameAware/BeanClassLoaderAware/BeanFactoryAware等
+                1698行：applyBeanPostProcessorsBeforeInitialization(wrappedBean, beanName);// 初始化方法执行前的拦截
+                1702行：invokeInitMethods(beanName, wrappedBean, mbd);// 执行初始化方法
+                1745行：invokeInitMethods// 初始化方法
+                1774行：invokeCustomInitMethod(beanName, bean, mbd);// 通过反射方式调用自定义 init 方法
+                1786行：invokeCustomInitMethod// 方法体
+                1830行：ReflectionUtils.makeAccessible(initMethod);
+                1831行：initMethod.invoke(bean);// Java 的反射机制执行 bean 的 init 方法
+                /*
+                * 初始化方法执行完毕之后，如果 bean 实现了 BeanPostProcessor 处理器的 After 方法，这里进行拦截
+                */
+                1710行：wrappedBean = applyBeanPostProcessorsAfterInitialization(wrappedBean, beanName);
+                 620行：registerDisposableBeanIfNecessary(beanName, bean, mbd);// 如果 bean 是可销毁的，则将其注册为可销毁对象
+
+            <-----------
+            317行：createBean方法完成，返回一个新的 bean 实例
+            199行：doCreateBean方法完成
+
+        <-----------
+        760行：getBean(beanName)方法完成
+        766行：给实现了 SmartInitializingSingleton 接口的 bean 一个机会进行拦截 afterSingletonsInstantiated，通知单实例初始化完毕
+
+    <-----------
+    869行：beanFactory.preInstantiateSingletons();// beanFactory工厂中所有单实例对象初始化完毕
+    553行：finishRefresh();// 初始化完毕，清理资源，发布通知等后续操作
+88行：refresh()方法执行完成
+AnnotationConfigApplicationContext 实例化完成，bean 创建完成，返回 main 方法栈

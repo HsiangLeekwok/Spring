@@ -16,6 +16,6 @@ public class MainConfig {
     // 给容器中注册一个bean，类型为返回值的类型
     @Bean("person01")
     public Person person01() {
-        return new Person("leek", 36);
+        return new Person("test", 36);
     }
 }
