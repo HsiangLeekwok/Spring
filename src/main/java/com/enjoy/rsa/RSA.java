@@ -85,9 +85,10 @@ public class RSA {
 
     /**
      * 进行加密或者解密过程
+     *
      * @param keySpec 密钥或公钥
-     * @param mode 加密或解密模式
-     * @param data 明文或密文的 byte[] 数组
+     * @param mode    加密或解密模式
+     * @param data    明文或密文的 byte[] 数组
      * @return 返回已加密或已解密的 byte[] 数组
      * @throws Exception
      */

@@ -101,3 +101,23 @@ AnnotationConfigApplicationContext app = new AnnotationConfigApplicationContext(
 */
 85行：AnnotationConfigApplicationContext(java.lang.Class<?>...)
 88行：refresh();// 这里跟普通 bean 创建流程一样
+
+-------------->
+
+    /*
+    * org.springframework.context.support.AbstractApplicationContext.class
+    */
+    516行：refresh()
+    // 从当前 beanFactory 中列出所有已经声明了的后置处理器
+    532行：invokeBeanFactoryPostProcessors(beanFactory);
+    --> 693行
+    694行：PostProcessorRegistrationDelegate.invokeBeanFactoryPostProcessors
+
+    -------------->
+
+        /*
+        * 所有后置处理器的注册委派类，通过这个类将当前 app 中所有已声明了的后置处理器列出来待初始化
+        * org.springframework.context.support.PostProcessorRegistrationDelegate.class
+        */
+        // 这一步处理完时，已声明了的处理器都会被找出来放到一个列表里，但实际处理的只有注解的处理器，因为这是第一个需要处理的
+        53行：invokeBeanFactoryPostProcessors
