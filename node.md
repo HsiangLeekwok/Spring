@@ -120,6 +120,11 @@ AOP 事务
         if no error then commit
     }
     
+BeanFactoryPostProcessor -> 
+
+    执行时机比较早，在这里面加载了所有预先定义的 Bean，包括所有的 Processor 和自定义的 Bean，但此时还未实例化 
+
+BeanDefinitionRegistryPostProcessor -> bean
 
 
 ## MySQL 索引
