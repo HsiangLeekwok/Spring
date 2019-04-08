@@ -126,6 +126,34 @@ BeanFactoryPostProcessor ->
 
 BeanDefinitionRegistryPostProcessor -> bean
 
+## IOC 源码分析 
+
+refresh() 方法流程[创建、刷新]
+
+1、synchronized 关键字锁定当前容器（避免多线程共享问题）
+
+2、prepareRefresh(): 刷新前的预处理
+    
+    1、initPropertySources();初始化一些属性设置，子类自定义个性化的属性设置方法
+    2、getEnvironment().validateRequiredProperties();检验属性的合法性
+    3、this.earlyApplicationEvents 保存容器中的一些早期事件
+    
+3、obtainFreshBeanFactory()获取或创建beanFactory
+
+    1、refreshBeanFactory()刷新或创建beanFactory
+    2、getBeanFactory()将刚生成的beanFactory返回
+    
+4、prepareBeanFactory(beanFactory); beanFactory的准备工作（前面创建的beanFactory只有一些默认值）
+
+    1、setBeanClassLoader(getClassLoader());设置beanFactory的类加载器
+       setBeanExpressionResolver加入表达式解析器
+       ignoreDependencyInterface设置忽略的自动装配接口（EnvironmentAware、ApplicationContextAware等）
+       registerResolvableDependency(BeanFactory.class, beanFactory); 注册可以解析的自动装配：能直接在任何组件中自动注入，如BeanFactory、ResourceLoader等
+       addBeanPostProcessor(new ApplicationListenerDetector(this));添加监听检测的处理器
+       加入环境变量
+    1、添加ApplicationContextAwareProcessor处理器
+
+
 
 ## MySQL 索引
 
